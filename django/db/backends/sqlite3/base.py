@@ -15,6 +15,7 @@ from django.db.backends.signals import connection_created
 from django.db.backends.sqlite3.client import DatabaseClient
 from django.db.backends.sqlite3.creation import DatabaseCreation
 from django.db.backends.sqlite3.introspection import DatabaseIntrospection
+from django.db.backends.sqlite3.schema import DatabaseSchemaManagement
 from django.utils.safestring import SafeString
 
 try:
@@ -184,6 +185,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         self.creation = DatabaseCreation(self)
         self.introspection = DatabaseIntrospection(self)
         self.validation = BaseDatabaseValidation(self)
+        self.schema = DatabaseSchemaManagement(self)
 
     def _cursor(self):
         if self.connection is None:

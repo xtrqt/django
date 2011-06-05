@@ -14,6 +14,7 @@ from django.db.backends.postgresql_psycopg2.client import DatabaseClient
 from django.db.backends.postgresql_psycopg2.creation import DatabaseCreation
 from django.db.backends.postgresql_psycopg2.version import get_version
 from django.db.backends.postgresql_psycopg2.introspection import DatabaseIntrospection
+from django.db.backends.postgresql_psycopg2.schema import DatabaseSchemaManagement
 from django.utils.safestring import SafeUnicode, SafeString
 
 try:
@@ -105,6 +106,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         self.creation = DatabaseCreation(self)
         self.introspection = DatabaseIntrospection(self)
         self.validation = BaseDatabaseValidation(self)
+        self.schema = DatabaseSchemaManagement(self)
 
     def _cursor(self):
         new_connection = False

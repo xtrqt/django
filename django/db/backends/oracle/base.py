@@ -51,6 +51,7 @@ from django.db.backends.signals import connection_created
 from django.db.backends.oracle.client import DatabaseClient
 from django.db.backends.oracle.creation import DatabaseCreation
 from django.db.backends.oracle.introspection import DatabaseIntrospection
+from django.db.backends.oracle.schema import DatabaseSchemaManagement
 from django.utils.encoding import smart_str, force_unicode
 
 DatabaseError = Database.DatabaseError
@@ -434,6 +435,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         self.creation = DatabaseCreation(self)
         self.introspection = DatabaseIntrospection(self)
         self.validation = BaseDatabaseValidation(self)
+        self.schema = DatabaseSchemaManagement(self)
 
     def _valid_connection(self):
         return self.connection is not None

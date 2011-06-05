@@ -32,6 +32,7 @@ from django.db.backends.mysql.client import DatabaseClient
 from django.db.backends.mysql.creation import DatabaseCreation
 from django.db.backends.mysql.introspection import DatabaseIntrospection
 from django.db.backends.mysql.validation import DatabaseValidation
+from django.db.backends.mysql.schema import DatabaseSchemaManagement
 from django.utils.safestring import SafeString, SafeUnicode
 
 # Raise exceptions for database warnings if DEBUG is on
@@ -292,6 +293,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
         self.creation = DatabaseCreation(self)
         self.introspection = DatabaseIntrospection(self)
         self.validation = DatabaseValidation(self)
+        self.schema = DatabaseSchemaManagement(self)
 
     def _valid_connection(self):
         if self.connection is not None:
