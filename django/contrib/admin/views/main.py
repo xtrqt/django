@@ -76,7 +76,7 @@ class ChangeList(object):
             self.list_editable = ()
         else:
             self.list_editable = list_editable
-        self.ordering = self.get_ordering()
+        self.ordering = self.get_ordering(request)
         self.query = request.GET.get(SEARCH_VAR, '')
         self.query_set = self.get_query_set(request)
         self.get_results(request)
@@ -91,21 +91,21 @@ class ChangeList(object):
         filter_specs = []
         cleaned_params, use_distinct = self.get_lookup_params(use_distinct)
         if self.list_filter:
-            for list_filer in self.list_filter:
-                if callable(list_filer):
+            for list_filter in self.list_filter:
+                if callable(list_filter):
                     # This is simply a custom list filter class.
-                    spec = list_filer(request, cleaned_params,
+                    spec = list_filter(request, cleaned_params,
                         self.model, self.model_admin)
                 else:
                     field_path = None
-                    if isinstance(list_filer, (tuple, list)):
+                    if isinstance(list_filter, (tuple, list)):
                         # This is a custom FieldListFilter class for a given field.
-                        field, field_list_filter_class = list_filer
+                        field, field_list_filter_class = list_filter
                     else:
                         # This is simply a field name, so use the default
                         # FieldListFilter class that has been registered for
                         # the type of the given field.
-                        field, field_list_filter_class = list_filer, FieldListFilter.create
+                        field, field_list_filter_class = list_filter, FieldListFilter.create
                     if not isinstance(field, models.Field):
                         field_path = field
                         field = get_fields_from_path(self.model, field_path)[-1]
@@ -172,12 +172,13 @@ class ChangeList(object):
             ordering = self.lookup_opts.ordering
         return ordering
 
-    def get_ordering(self):
+    def get_ordering(self, request):
         params = self.params
-        # For ordering, first check the "ordering" parameter in the admin
+        # For ordering, first check the if exists the "get_ordering" method
+        # in model admin, then check "ordering" parameter in the admin
         # options, then check the object's default ordering. Finally, a
         # manually-specified ordering from the query string overrides anything.
-        ordering = self._get_default_ordering()
+        ordering = self.model_admin.get_ordering(request) or self._get_default_ordering()
 
         if ORDER_VAR in params:
             # Clear ordering and used params

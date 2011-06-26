@@ -83,6 +83,8 @@ the full list of conversions:
 
     ``IPAddressField``               ``IPAddressField``
 
+    ``GenericIPAddressField``        ``GenericIPAddressField``
+
     ``ManyToManyField``              ``ModelMultipleChoiceField`` (see
                                      below)
 
@@ -828,6 +830,10 @@ a particular author, you could do this::
 .. note::
     ``inlineformset_factory`` uses ``modelformset_factory`` and marks
     ``can_delete=True``.
+
+.. seealso::
+
+    :ref:`Manually rendered can_delete and can_order <manually-rendered-can-delete-and-can-order>`.
 
 More than one foreign key to the same model
 -------------------------------------------

@@ -111,8 +111,8 @@ class WizardView(TemplateView):
         return super(WizardView, cls).as_view(**initkwargs)
 
     @classmethod
-    def get_initkwargs(cls, form_list,
-            initial_dict=None, instance_dict=None, condition_dict=None):
+    def get_initkwargs(cls, form_list, initial_dict=None,
+            instance_dict=None, condition_dict=None, *args, **kwargs):
         """
         Creates a dict with all needed parameters for the form wizard instances.
 
@@ -134,11 +134,11 @@ class WizardView(TemplateView):
           will be called with the formwizard instance as the only argument.
           If the return value is true, the step's form will be used.
         """
-        kwargs = {
+        kwargs.update({
             'initial_dict': initial_dict or {},
             'instance_dict': instance_dict or {},
             'condition_dict': condition_dict or {},
-        }
+        })
         init_form_list = SortedDict()
 
         assert len(form_list) > 0, 'at least one form is needed'
@@ -354,6 +354,13 @@ class WizardView(TemplateView):
         """
         return self.instance_dict.get(step, None)
 
+    def get_form_kwargs(self, step=None):
+        """
+        Returns the keyword arguments for instantiating the form
+        (or formset) on given step.
+        """
+        return {}
+
     def get_form(self, step=None, data=None, files=None):
         """
         Constructs the form for a given `step`. If no `step` is defined, the
@@ -366,12 +373,13 @@ class WizardView(TemplateView):
         if step is None:
             step = self.steps.current
         # prepare the kwargs for the form instance.
-        kwargs = {
+        kwargs = self.get_form_kwargs(step)
+        kwargs.update({
             'data': data,
             'files': files,
             'prefix': self.get_form_prefix(step, self.form_list[step]),
             'initial': self.get_form_initial(step),
-        }
+        })
         if issubclass(self.form_list[step], forms.ModelForm):
             # If the form is based on ModelForm, add instance if available.
             kwargs.update({'instance': self.get_form_instance(step)})
@@ -567,21 +575,16 @@ class NamedUrlWizardView(WizardView):
         We require a url_name to reverse URLs later. Additionally users can
         pass a done_step_name to change the URL name of the "done" view.
         """
-        extra_kwargs = {
-            'done_step_name': 'done'
-        }
         assert 'url_name' in kwargs, 'URL name is needed to resolve correct wizard URLs'
-        extra_kwargs['url_name'] = kwargs.pop('url_name')
-
-        if 'done_step_name' in kwargs:
-            extra_kwargs['done_step_name'] = kwargs.pop('done_step_name')
-
+        extra_kwargs = {
+            'done_step_name': kwargs.pop('done_step_name', 'done'),
+            'url_name': kwargs.pop('url_name'),
+        }
         initkwargs = super(NamedUrlWizardView, cls).get_initkwargs(*args, **kwargs)
         initkwargs.update(extra_kwargs)
 
         assert initkwargs['done_step_name'] not in initkwargs['form_list'], \
             'step name "%s" is reserved for "done" view' % initkwargs['done_step_name']
-
         return initkwargs
 
     def get(self, *args, **kwargs):
