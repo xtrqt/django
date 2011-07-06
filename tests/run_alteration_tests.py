@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-from runtests import django_tests #@UnresolvedImport
 import os, sys
+sys.path.append("..")
+
+from runtests import django_tests 
 
 # sqlite tests
 os.environ['PYTHONPATH'] = "~/Desktop/django_hack/gsoc2011/django"
