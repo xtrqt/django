@@ -11,6 +11,7 @@ model maps to a single database table.
    :maxdepth: 1
 
    models
+   schema-alteration
    queries
    aggregation
    managers

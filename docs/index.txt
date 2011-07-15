@@ -72,7 +72,8 @@ The model layer
       :doc:`Supported databases <ref/databases>` |
       :doc:`Legacy databases <howto/legacy-databases>` |
       :doc:`Providing initial data <howto/initial-data>` |
-      :doc:`Optimize database access <topics/db/optimization>`
+      :doc:`Optimize database access <topics/db/optimization>` |
+      :doc:`Schema alteration <topics/db/schema-alteration>`
 
 The template layer
 ==================

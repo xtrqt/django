@@ -1,0 +1,172 @@
+=================
+Schema Alteration
+=================
+
+.. currentmodule:: django.db
+
+When automatic database structure for models, that Django is offering, is not enough.
+You can always create and define your database structures manually. Purpose 
+of this API is to facilitate this task. It allows to create schema and alters it, with 
+set of backend universal methods.
+
+.. versionadded:: 1.4
+	The schema alteration API was added.	
+
+Accessing API
+=============
+
+API is accessed by ``schema`` field of ``django.db.connection``. This field is instance
+of class derived from :class:`~django.db.backends.schema.BaseDatabaseSchemaManagement`.
+This class defines all methods that are necessary to alter database schema. Each backend
+creates it's own implementation inherited from that class.
+
+.. admonition:: Multiple databases
+
+    In multiple database environment ``django.db.connection`` becomes
+    ``django.db.connections['my_db_alias']``
+
+Even though this functionality means to give certain amount of freedom in schema management
+process, it is still heavily bound to ``django.db``. It can be clearly seen in all places
+where column data type declaration is necessary. All database types are passed by 
+:class:`django.db.model.Field`, so to define custom type you need to provide custom class 
+derived from :class:`~django.db.model.Field`. 
+
+.. _schema-alteration-table-operations:
+
+Table operations
+================
+
+Table is created by passing to ``create_table()`` method set of arguments, representing 
+name of table and list of tuples each representing one field, name of field and 
+:class:`django.db.model.Field` instance describing type of field.
+
+Example::
+
+    from django.db import connection
+    from django.db.models import AutoField, CharField, IntegerField
+    
+    connection.schema.create_table("test_table",
+                                   [("id", AutoField(primary_key=True)), 
+                                    ("name", CharField(max_length=50)),
+                                    ("value", IntegerField(max_length=50))])
+    
+
+    
+.. method:: BaseDatabaseSchemaManagement.create_table(table_name, fields, explicit_names=False)
+
+    Creates table in database pointed by parent ``connection`` instance.
+    ``table_name`` is name of table to create, ``fields`` is list
+    of tuples: ("name", model_field_class_instance) describing structure.
+
+.. _explicit-name-behavior:
+
+.. admonition:: ``explicit_name`` behavior
+
+    :class:`~django.db.models.Field` allows to override created column name,
+    for example adding suffix '_id' for related fields. 
+    If ``explicit_names`` parameter is True, this behavior is suppressed. 
+
+.. method:: BaseDatabaseSchemaManagement.delete_table(table_name)
+
+    Delete table from database pointed by parent ``connection`` instance.
+    ``table_name`` is name of table to delete.
+
+.. method:: BaseDatabaseSchemaManagement.clear_table(table_name)
+
+    Clear data stored inside table. ``table_name`` is name of table to clear.
+
+.. _schema-alteration-colums-operations:
+
+Columns operations
+==================
+
+.. method:: add_column(self, table_name, column_name, field, explicit_name=True, keep_default=True):
+    
+    Adds the column ``column_name`` to the table ``table_name``. ``field`` is instance 
+    of :class:`~django.db.models.Field` subclass, it is used to define type.
+  
+    ``explicit_name`` see :ref:`note <explicit-name-behavior>`
+
+.. method:: alter_column(self, table_name, column_name, field, explicit_name=True, 
+                         ignore_constraints=False):
+    
+    Alters the given column name so it will match the given field definition.
+    Note that conversion between the two by the database must be possible.
+    ``ignore_constraints`` states if action is not against any of constraints
+    over altered column, if so (``ignore_constraints==False``) all constraints
+    will be identified, removed and created again.
+    
+    ``explicit_name`` see :ref:`note <explicit-name-behavior>`
+
+.. method:: delete_column(self, table_name, column_name):
+        
+    Deletes the column ``column_name`` from the table ``table_name``.
+
+.. method:: rename_column(self, table_name, column_name, new_column_name):
+    
+    Renames the column ``column_name`` from the table ``table_name`` to ``new_column_name``.
+
+.. _schema-alteration-index-operations:
+
+Index operations
+================
+
+.. method:: create_index(self, table_name, column_names, unique=False, 
+                         db_tablespace=''):
+    
+    Create index on table ``table_name`` for columns defined in list 
+    ``column_names``. ``unique`` specifies if values in index should be
+    unique.
+
+.. method:: create_primary_key(self, table_name, columns):
+
+    Creates a new primary key for table ``table_name`` 
+    on the specified ``columns`` .
+   
+.. method:: create_unique(self, table_name, columns):
+    
+    Creates a UNIQUE constraint on the ``columns`` on the given table
+    ``table_name``.
+        
+    
+.. method:: delete_primary_key(self, table_name):
+   
+    Drops the primary key of table ``table_name``.
+
+ 
+.. method:: delete_foreign_key(self, table_name, column_name):
+    
+    Remove foreign key constraint from table ``table_name`` on column
+    ``column_name``
+    
+.. method:: delete_index(self, table_name, column_names, db_tablespace=''):
+
+    Deletes an index for columns from ``column_names`` created with 
+    :meth:`create_index()` method.
+    
+    .. warning::
+
+    Can remove only index created by :meth:`create_index()` due to the
+    deterministic index naming function which relies on column names.
+    
+    
+.. method:: delete_unique(self, table_name, columns):
+
+    Remove a UNIQUE constraint on the ``columns`` of ``table_name`` table.
+
+
+Other methods
+=============
+
+.. method:: start_dry_run(self):
+
+   Starts dry run mode, in which no SQL is executed.
+   SQL is only buffered and returned on :meth:`finish_dry_run()`
+        
+.. method:: finish_dry_run(self):
+
+    Finish dry run mode, in which no SQL is executed.
+    SQL is only buffered. This method returns all buffered queries as list.
+
+
+ 
