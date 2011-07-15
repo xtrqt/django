@@ -3,13 +3,6 @@ from django.db import connection
 from django.db.models.fields import AutoField, CharField
 
 
-## todo: remove
-try:
-    from IPython.Shell import IPShellEmbed
-    ipshell = IPShellEmbed()
-except:
-    pass
-
 class SimpleTests(TestCase):
 
     def test_create_table(self):
@@ -94,17 +87,14 @@ class SimpleTests(TestCase):
         
         connection.schema.add_column("TestTable5", "test_field", CharField(max_length=50, default=""))
         result = connection.introspection.get_table_description(connection.cursor(), 'TestTable5')
-        self.assertEqual(result, [(u'id', u'integer', None, None, None, None, False),
-                                  (u'test_field', u'varchar(50)', None, None, None, None, False)])
+        self.assertEqual(set(result), set([(u'id', u'integer', None, None, None, None, True),
+                                        (u'test_field', u'varchar(50)', None, None, None, None, False)]))
         
 
     def test_alter_column(self):
         """
         Create table and alter column
         """
-        
-        #sqlite3 need implementation to pass the test for now it is switched off.
-        return
         
         # Create
         connection.schema.create_table("TestTable6", [("id", AutoField(primary_key=True)),
@@ -118,8 +108,8 @@ class SimpleTests(TestCase):
         
         connection.schema.alter_column("TestTable6", "test_field", CharField(max_length=80, default=""))
         result = connection.introspection.get_table_description(connection.cursor(), 'TestTable6')
-        self.assertEqual(result, [(u'id', u'integer', None, None, None, None, False),
-                                  (u'test_field', u'varchar(80)', None, None, None, None, False)])
+        self.assertEqual(set(result), set([(u'id', u'integer', None, None, None, None, True),
+                                  (u'test_field', u'varchar(80)', None, None, None, None, False)]))
         
         
     def test_create_delete_unique(self):

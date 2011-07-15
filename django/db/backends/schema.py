@@ -37,7 +37,7 @@ class BaseDatabaseSchemaManagement(object):
     delete_foreign_key_sql = 'ALTER TABLE %(table_name)s DROP CONSTRAINT %(constraint)s'
     create_unique_string = "ALTER TABLE %(table_name)s ADD CONSTRAINT %(name)s UNIQUE (%(columns)s)"
     drop_index_string = 'DROP INDEX %(index_name)s'
-    delete_column_string = 'ALTER TABLE %s DROP COLUMN %s CASCADE;'
+    delete_column_string = 'ALTER TABLE %(table_name)s DROP COLUMN %(column_name)s CASCADE;'
     create_primary_key_string = "ALTER TABLE %(table)s ADD CONSTRAINT %(constraint)s PRIMARY KEY (%(columns)s)"
     delete_primary_key_sql = "ALTER TABLE %(table)s DROP CONSTRAINT %(constraint)s"
     foreign_key_string = 'ALTER TABLE %(table_name)s ADD CONSTRAINT %(constraint)s FOREIGN KEY (%(column)s) REFERENCES %(to_table)s (%to_column)s)%(deferrable_sql)s;'
@@ -56,6 +56,8 @@ class BaseDatabaseSchemaManagement(object):
         
         # place to buffer all SQL code that is not executed due to `dry_run`.
         self.dry_run_buffer = []
+        
+        self.debug = True
         
     def start_dry_run(self):
         """
@@ -345,13 +347,13 @@ class BaseDatabaseSchemaManagement(object):
         }
     
         
-    def delete_foreign_key(self, table_name, column):
+    def delete_foreign_key(self, table_name, column_name):
         "Drop a foreign key constraint"
         if self.dry_run:
             return # We can't look at the DB to get the constraints
-        constraints = list(self._constraints_affecting_columns(table_name, [column], "FOREIGN KEY"))
+        constraints = list(self._constraints_affecting_columns(table_name, [column_name], "FOREIGN KEY"))
         if not constraints:
-            raise ValueError("Cannot find a FOREIGN KEY constraint on table %s, column %s" % (table_name, column))
+            raise ValueError("Cannot find a FOREIGN KEY constraint on table %s, column %s" % (table_name, column_name))
         for constraint_name in constraints:
             self.execute(self.delete_foreign_key_sql % {
                 "table_name": self.quote_name(table_name),
@@ -422,14 +424,15 @@ class BaseDatabaseSchemaManagement(object):
         }
         self.execute(sql)
 
-    def delete_column(self, table_name, name):
+    def delete_column(self, table_name, column_name):
         """
         Deletes the column 'column_name' from the table 'table_name'.
         """
-        params = (self.quote_name(table_name), self.quote_name(name))
+        params = { 'table_name': self.quote_name(table_name), 
+                   'column_name': self.quote_name(column_name) }
         self.execute(self.delete_column_string % params, [])
 
-    def rename_column(self, table_name, old, new):
+    def rename_column(self, table_name, column_name, new_column_name):
         """
         Renames the column 'old' from the table 'table_name' to 'new'.
         """
